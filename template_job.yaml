@@ -1,0 +1,41 @@
+apiVersion: batch.volcano.sh/v1alpha1
+kind: Job
+metadata:
+  name: JOB_NAME
+spec:
+  minAvailable: 1
+  schedulerName: volcano
+  queue: VOLCANO_QUEUE
+  policies:
+    - event: PodEvicted
+      action: RestartJob
+  tasks:
+    - replicas: 1
+      name: task
+      policies:
+      - event: TaskCompleted
+        action: CompleteJob
+      template:
+        spec:
+          containers:
+            - name: cromwell
+              image: C_IMAGE
+              workingDir: /wegene-qc-workspace-test/ycy/test
+              command:
+              - bash 
+              - EXECUTION_DIR/script
+              resources:
+                requests:
+                  cpu: CPUS
+                  memory: MEMORYS
+                limits:
+                  cpu: CPUS
+                  memory: MEMORYS
+              volumeMounts:
+              - name: oss-pvc
+                mountPath: /wegene-qc-workspace-test
+          volumes:
+          - name: oss-pvc
+            persistentVolumeClaim:
+              claimName: oss-bio
+          restartPolicy: Never
